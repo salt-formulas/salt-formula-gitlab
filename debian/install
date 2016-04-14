@@ -1,2 +1,0 @@
-gitlab/*             /usr/share/salt-formulas/env/gitlab/
-metadata/service/*      /usr/share/salt-formulas/reclass/service/gitlab/
