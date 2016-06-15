@@ -1,0 +1,8 @@
+name: gitlab
+os: 
+os_family: 
+version: 201606
+release: 1
+summary: Gitlab salt formula
+description: Install and configure Gitlab service.
+top_level_dir: gitlab
