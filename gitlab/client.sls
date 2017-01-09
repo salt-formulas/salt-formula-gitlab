@@ -3,14 +3,34 @@
 
 gitlab_client_packages:
   pkg.installed:
-  - names:
-    - python-pip
+  - names: {{ client.pkg }}
   pip.installed:
-  - name: {{ client.pip_pkg }}
+  - name: {{ client.pip }}
   - require:
     - pkg: gitlab_client_packages
 
-{%- for repo_name, repo in client.repository.iteritems() %}
+{%- for group_name, group in client.get('group', {}).iteritems() %}
+
+{%- if group.get('enabled', true) %}
+
+gitlab_group_{{ group_name }}:
+  gitlab.group_present:
+  - name: {{ group_name }}
+{%- if group.description is defined  %}
+  - description: {{ group.description }}
+{%- endif  %}
+
+{%- else %}
+
+gitlab_group_{{ group_name }}:
+  gitlab.group_absent:
+  - name: {{ group_name }}
+
+{%- endif %}
+
+{%- endfor %}
+
+{%- for repo_name, repo in client.get('repository', {}).iteritems() %}
 
 {%- if repo.enabled %}
 

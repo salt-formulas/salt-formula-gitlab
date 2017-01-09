@@ -2,7 +2,7 @@
 '''
 Module for handling Gitlab calls.
 
-:optdepends:    - pyapi-gitlab Python adapter
+:optdepends:    - python-gitlab Python adapter
 :configuration: This module is not usable until the following are specified
     either in a pillar or in the minion's config file::
 
@@ -10,10 +10,10 @@ Module for handling Gitlab calls.
         gitlab.password: verybadpass
         gitlab.url: 'https://gitlab.domain.com/'
 
-        OR (for API based authentication)
+        or (for API token based authentication)
 
         gitlab.user: admin
-        gitlab.api: '432432432432432'
+        gitlab.token: '432432432432432'
         gitlab.url: 'https://gitlab.domain.com'
 '''
 
@@ -24,7 +24,6 @@ import os
 
 LOG = logging.getLogger(__name__)
 
-# Import third party libs
 HAS_GITLAB = False
 try:
     from gitlab import Gitlab
@@ -32,28 +31,44 @@ try:
 except ImportError:
     pass
 
-PER_PAGE = os.getenv("GITLAB_PER_PAGE", 1000)
 
 def __virtual__():
     '''
-    Only load this module if gitlab
-    is installed on this minion.
+    Only load this module if gitlab lib is installed on this minion.
     '''
     if HAS_GITLAB:
         return 'gitlab'
     return False
 
-__opts__ = {}
+
+def _group_to_dict(group):
+    return {
+        'id': group.id,
+        'name': group.name,
+        'description': group.description,
+        'path': group.path,
+        'url': group.web_url,
+        'visibility_level': group.visibility_level,
+        'lfs_enabled': group.lfs_enabled,
+        'request_access_enabled': group.request_access_enabled,
+    }
 
 
-def _get_project_by_id(git, id):
-    selected_project = git.getproject(id)
-    return selected_project
+def _project_to_dict(project):
+    return {
+        'id': project.id,
+        'name': project.name,
+        'description': project.description,
+        'path': project.path,
+        'path_with_namespace': project.path_with_namespace,
+        'url': project.web_url,
+        'visibility_level': project.visibility_level,
+        'public': project.public,
+        'default_branch': project.default_branch,
+    }
 
 
-def _get_project(git, name):
-    if str(name).isdigit():
-        return _get_project_by_id(git, name)
+def _get_project(gitlab, path_with_namespace):
 
     selected_project = None
     projects = git.getprojectsall(per_page=PER_PAGE)
@@ -70,43 +85,42 @@ def _get_project(git, name):
     return selected_project
 
 
-def auth(**connection_args):
+def auth(**kwargs):
     '''
-    Set up gitlab credentials
-
-    Only intended to be used within Gitlab-enabled modules
+    Set up gitlab authenticated client
     '''
    
     prefix = "gitlab."
 
-    # look in connection_args first, then default to config file
-    def get(key, default=None):
-        return connection_args.get('connection_' + key,
+    # look in kwargs first, then default to config file
+    def get_key(key, default=None):
+        return kwargs.get('connection_' + key,
             __salt__['config.get'](prefix + key, default))
 
-    user = get('user', 'admin')
-    password = get('password', 'ADMIN')
-    token = get('token')
-    url = get('url', 'https://localhost/')
+    user = get_key('user', 'admin')
+    password = get_key('password', 'ADMIN')
+    token = get_key('token')
+    url = get_key('url', 'https://localhost/')
+    LOG.info("Making HTTP request to {0} ...".format(url))
     if token:
-        git = Gitlab(url, token=token, verify_ssl=False)
+        git = Gitlab(url, token, ssl_verify=False)
     else:
-        git = Gitlab(url)
-        git.login(user, password, verify_ssl=False)
+        git = Gitlab(url, email=user, password=password, ssl_verify=False)
+    git.auth()
     return git
 
 
-def hook_get(hook_url, project_id=None, project_name=None, **connection_args):
+def hook_get(path_with_namespace, hook_url, **kwargs):
     '''
-    Return a specific endpoint (gitlab endpoint-get)
+    Return a specific hook for gitlab repository
 
     CLI Example:
-
+ 
     .. code-block:: bash
 
         salt '*' gitlab.endpoint_get nova
     '''
-    git = auth(**connection_args)
+    git = auth(**kwargs)
     if project_name:
         project = _get_project(git, project_name)
     else:
@@ -119,7 +133,7 @@ def hook_get(hook_url, project_id=None, project_name=None, **connection_args):
     return {'Error': 'Could not find hook for the specified project'}
 
 
-def hook_list(project, **connection_args):
+def hook_list(project, **kwargs):
     '''
     Return a list of available hooks for project
 
@@ -129,7 +143,7 @@ def hook_list(project, **connection_args):
 
         salt '*' gitlab.hook_list 341
     '''
-    git = auth(**connection_args)
+    git = auth(**kwargs)
     ret = {}
 
     project = _get_project(git, project)
@@ -142,7 +156,7 @@ def hook_list(project, **connection_args):
 
 
 def hook_create(hook_url, issues_events=False, merge_requests_events=False, \
-    push_events=False, project_id=None, project_name=None, **connection_args):
+    push_events=False, project_id=None, project_name=None, **kwargs):
     '''
     Create an hook for a project
 
@@ -152,7 +166,7 @@ def hook_create(hook_url, issues_events=False, merge_requests_events=False, \
 
         salt '*' gitlab.hook_create 'https://hook.url/' push_events=True project_id=300
     '''
-    git = auth(**connection_args)
+    git = auth(**kwargs)
     if project_name:
         project = _get_project(git, project_name)
     else:
@@ -168,7 +182,7 @@ def hook_create(hook_url, issues_events=False, merge_requests_events=False, \
     return hook_get(hook_url, project_id=project['id'])
 
 
-def hook_delete(hook_url, project_id=None, project_name=None, **connection_args):
+def hook_delete(hook_url, project_id=None, project_name=None, **kwargs):
     '''
     Delete hook of a Gitlab project
 
@@ -178,7 +192,7 @@ def hook_delete(hook_url, project_id=None, project_name=None, **connection_args)
 
         salt '*' gitlab.hook_delete 'https://hook.url/' project_id=300
     '''
-    git = auth(**connection_args)
+    git = auth(**kwargs)
     if project_name:
         project = _get_project(git, project_name)
     else:
@@ -191,33 +205,20 @@ def hook_delete(hook_url, project_id=None, project_name=None, **connection_args)
     return {'Error': 'Could not find hook for the specified project'}
 
 
-def deploykey_create(title, key, project, **kwargs):
+def deploykey_create(project, name, key, **kwargs):
     '''
     Add deploy key to Gitlab project
 
-    :param project_id: project id
-    :param title: title of the key
-    :param key: the key itself
+    :param project: Project namespace and path
+    :param title: Human name of the key
+    :param key: The key value itself
     :return: true if sucess, false if not
-
-    Reclass definition
-    -----
-
-    .. code-block:: yaml
-
-        repository:
-          name-space/repo-name:
-            deploy_key:
-              keyname:
-                enabled: true
-                key: public_part_of_ssh_key
 
     CLI Examples:
 
     .. code-block:: bash
 
-        salt '*' gitlab.deploykey_create title keyfrsdfdsfds 43 --log-level=debug
-
+        salt '*' gitlab.deploykey_create title keyfrsdfdsfds 43
     '''
     git = auth(**kwargs)
 
@@ -236,7 +237,8 @@ def deploykey_create(title, key, project, **kwargs):
 
     return 'Gitlab deploy key ID "{0}" was added to {1}'.format(title, project['path_with_namespace'])
 
-def deploykey_delete(title, key, project, **kwargs):
+
+def deploykey_delete(path_with_namespace, deploy_key, **kwargs):
     '''
     Delete a deploy key from Gitlab project
 
@@ -284,7 +286,7 @@ def deploykey_get(title, project, **kwargs):
     return {'Error': 'Could not find deploy key for the specified project'}
 
 
-def deploykey_list(project_id=None, project_name=None, **connection_args):
+def deploykey_list(project, **kwargs):
     '''
     Return a list of available deploy keys for project
 
@@ -294,33 +296,32 @@ def deploykey_list(project_id=None, project_name=None, **connection_args):
 
         salt '*' gitlab.deploykey_list 341
     '''
-    git = auth(**connection_args)
+    gitlab = auth(**kwargs)
     ret = {}
-    if project_name:
-        project = _get_project(git, project_name)
-    else:
-        project = _get_project_by_id(git, project_id)
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for key in git.getdeploykeys(project.get('id')):
+    project = project_get(project, **kwargs)
+    if not 'Error' in project:
+        return {'Error': 'Unable to get the repository'}
+
+    keys = gitlab.project_keys.list(project_id=project[project]['id'])
+    print keys[0]
+
+    for key in keys:
         ret[key.get('title')] = key
     return ret
 
 
-def project_create(name, **kwargs):
+def project_create(path_with_namespace, description="", default_branch="master", **kwargs):
     '''
     Create a gitlab project
 
-    :param name: new project name
-    :param path: custom repository name for new project. By default generated based on name
-    :param namespace_id: namespace for the new project (defaults to user)
+    :param path_with_namespace: new project name
     :param description: short project description
     :param issues_enabled:
     :param merge_requests_enabled:
     :param wiki_enabled:
     :param snippets_enabled:
     :param public: if true same as setting visibility_level = 20
-    :param visibility_level:
+    :param visibility_level: Integer 1-20
     :param import_url: https://git.tcpcloud.eu/django/django-kedb.git
 
     CLI Examples:
@@ -328,87 +329,84 @@ def project_create(name, **kwargs):
     .. code-block:: bash
 
         salt '*' gitlab.project_create namespace/nova description='nova project'
-        salt '*' gitlab.project_create namespace/test enabled=False
-    
+        salt '*' gitlab.project_create namespace/test enabled=False    
     '''
+    gitlab = auth(**kwargs)
     ret = {}
-    git = auth(**kwargs)
-
-    project = _get_project(git, name)
-
-    if project and not "Error" in project:
-        LOG.debug("Project {0} exists".format(name))
-        ret[project.get('path_with_namespace')] = project
+    group_name, project_name = path_with_namespace.split('/')
+    projects = project_list(**kwargs)
+    if path_with_namespace in projects:
+        LOG.info("Project {0} already exists".format(path_with_namespace))
+        ret[path_with_namespace] = projects[path_with_namespace]
         return ret
-
-    group_name, name = name.split('/')
-    group = group_get(name=group_name)[group_name]
-    kwargs['namespace_id'] = group.get('id')
-    kwargs['name'] = name
-    LOG.debug(kwargs)
-
-    new = git.createproject(**kwargs)
-    if not new:
-        return {'Error': 'Error creating project %s' % new}
+    namespace = group_get(group_name)
+    if "Error" in namespace:
+        LOG.info("Group {0} does not exists".format(group_name))
+        return ret
     else:
-        LOG.debug(new)
-        ret[new.get('path_with_namespace')] = new
-        return ret
+        group = namespace[group_name]
 
-def project_delete(project, **kwargs):
+    new_project_data = {
+        'name': project_name,
+        'namespace_id': group['id'],
+        'description': description,
+        'default_branch': default_branch
+    }
+    new_project = gitlab.projects.create(new_project_data)
+    if not new_project:
+        return {'Error': 'Error creating project %s' % path_with_namespace}
+    else:
+        return project_get(path_with_namespace)
+
+
+def project_delete(path_with_namespace, **kwargs):
     '''
     Delete a project (gitlab project-delete)
 
-    :params project: Name or ID
+    :params path_with_namespace: Path with namespace of the repository
 
     CLI Examples:
 
     .. code-block:: bash
 
-        salt '*' gitlab.project_delete c965f79c4f864eaaa9c3b41904e67082
-        salt '*' gitlab.project_delete project_id=c965f79c4f864eaaa9c3b41904e67082
-        salt '*' gitlab.project_delete name=demo
+        salt '*' gitlab.project_delete namespace/demo
     '''
-    git = auth(**kwargs)
-
-    project = _get_project(git, project)
-
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-
-    del_ret = git.deleteproject(project["id"])
-    ret = 'Project ID {0} deleted'.format(project["path_with_namespace"])
-    ret += ' ({0})'.format(project["path_with_namespace"])
-
-    return ret
-
-
-def project_get(project_id=None, name=None, **kwargs):
-    '''
-    Return a specific project
-
-    CLI Examples:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.project_get 323
-        salt '*' gitlab.project_get project_id=323
-        salt '*' gitlab.project_get name=namespace/repository
-    '''
-    git = auth(**kwargs)
+    gitlab = auth(**kwargs)
     ret = {}
-    #object_list = project_list(kwargs)
+    projects = project_list(**kwargs)
+    if not path_with_namespace in projects:
+        LOG.info("Project {0} does not exist".format(path_with_namespace))
+        return ret
+    else: 
+        gitlab.projects.delete(projects[path_with_namespace]["id"])
+        ret = 'Project {0} deleted'.format(path_with_namespace)
+        return ret
 
-    project = _get_project(git, name or project_id)
-    if not project:
+
+def project_get(path_with_namespace, **kwargs):
+    '''
+    Return specific project
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.project_get namespace/repository
+        salt '*' gitlab.project_get id=323
+    '''
+    gitlab = auth(**kwargs)
+    ret = {}
+    projects = project_list(**kwargs)
+    if path_with_namespace in projects:
+      ret[path_with_namespace] = projects.get(path_with_namespace)
+    if len(ret) == 0:
         return {'Error': 'Error in retrieving project'}
-    ret[project.get('name')] = project
     return ret
 
 
-def project_list(**connection_args):
+def project_list(**kwargs):
     '''
-    Return a list of available projects
+    Return a list of all projects
 
     CLI Example:
 
@@ -416,34 +414,25 @@ def project_list(**connection_args):
 
         salt '*' gitlab.project_list
     '''
-    git = auth(**connection_args)
+    gitlab = auth(**kwargs)
     ret = {}
-
-    projects = git.getprojectsall(per_page=PER_PAGE)
-    page = 1
-
-    while len(projects) > 0:
-        for project in projects:
-            ret[project.get('path_with_namespace')] = project
-        page += 1
-        projects = git.getprojectsall(page=page, per_page=PER_PAGE)
+    projects = gitlab.projects.all()
+    for project in projects:
+        ret[project.path_with_namespace] = _project_to_dict(project)
     return ret
 
-def project_update(project_id=None, name=None, email=None,
-                  enabled=None, default_branch=None, description=None, **connection_args):
+
+def project_update(path_with_namespace=None, **kwargs):
     '''
-    Update a project's information (gitlab project-update)
-    The following fields may be updated: name, email, enabled.
-    Can only update name if targeting by ID
+    Update gitlab project
 
     CLI Examples:
 
     .. code-block:: bash
 
-        salt '*' gitlab.project_update name=admin enabled=True
-        salt '*' gitlab.project_update 123
+        salt '*' gitlab.project_update name-space/project-name
     '''
-    git = auth(**connection_args)
+    git = auth(**kwargs)
     if project_id:
         project = project_get(project_id)
     else:
@@ -458,7 +447,7 @@ def project_update(project_id=None, name=None, email=None,
     git.editproject(project_id, default_branch=default_branch)
 
 
-def group_list(group_name=None, **connection_args):
+def group_list(**kwargs):
     '''
     Return a list of available groups
 
@@ -468,14 +457,15 @@ def group_list(group_name=None, **connection_args):
 
         salt '*' gitlab.group_list
     '''
-    git = auth(**connection_args)
+    gitlab = auth(**kwargs)
     ret = {}
-    for group in git.getgroups(group_id=None, page=1, per_page=100):
-        ret[group.get('name')] = group
+    groups = gitlab.groups.list(all=True)
+    for group in groups:
+        ret[group.name] = _group_to_dict(group)
     return ret
 
 
-def group_get(id=None, name=None, **connection_args):
+def group_get(name, **kwargs):
     '''
     Return a specific group
 
@@ -483,21 +473,72 @@ def group_get(id=None, name=None, **connection_args):
 
     .. code-block:: bash
 
-        salt '*' gitlab.group_get 323
-        salt '*' gitlab.group_get name=namespace
-
+        salt '*' gitlab.group_get groupname
     '''
-    git = auth(**connection_args)
+    gitlab = auth(**kwargs)
     ret = {}
-    if id == None:
-        for group in git.getgroups(group_id=None, page=1, per_page=100):
-            if group.get('path') == name or group.get('name') == name:
-                ret[group.get('path')] = group
-    else:
-        group = git.getgroups(id)
-        if group != False:
-            ret[group.get('path')] = group
+    groups = group_list(**kwargs)
+    if name in groups:
+      ret[name] = groups.get(name)
     if len(ret) == 0:
         return {'Error': 'Error in retrieving group'}
     return ret
+
+
+def group_create(name, path=None, description="", visibility_level=20, **kwargs):
+    '''
+    Create a new group
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.group_create group_name
+
+    '''
+    if path == None:
+        path = name
+    groups = group_list(**kwargs)
+    gitlab = auth(**kwargs)
+    namespace = None
+    if name in groups:
+        try:
+            namespace = groups.get(name)
+        except:
+            pass
+    if namespace == None:
+        group_data = {
+            'name': name,
+            'path': path,
+            'description': description,
+            'visibility_level': visibility_level
+        }
+        gitlab.groups.create(group_data)
+        return group_get(name)
+    else:
+        return {'Error': 'Group %s already exists' % name}
+
+
+def group_delete(name, **kwargs):
+    '''
+    Delete a Group
+
+    :params name: Name of the group
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.group_delete groupname
+    '''
+    gitlab = auth(**kwargs)
+    ret = {}
+    groups = group_list(**kwargs)
+    if not name in groups:
+        LOG.info("Group {0} does not exist".format(name))
+        return ret
+    else: 
+        gitlab.groups.delete(groups[name]['id'])
+        ret = 'Group {0} deleted'.format(name)
+        return ret
 

@@ -8,6 +8,9 @@ Gitlab is a free git repository management application based on Ruby on Rails. I
 Sample pillars
 ==============
 
+Gitlab server resources
+-----------------------
+
 Gitlab server with local MTA and MySQL database
 
     gitlab:
@@ -32,19 +35,22 @@ Gitlab server with local MTA and MySQL database
 
 Gitlab server from custom source code repository
 
+.. code-block:: yaml
+
     gitlab:
       server:
         enabled: true
-        version: '6.3'
+        version: '8.12'
         source:
           engine: git
-          address: git://repo.domain.com
-          rev: '6.3'
+          host: git://git.domain.com
         server_name: 'repo1.domain.com'
         mail_from: 'gitlab@domain.com'
         support_email: 'webmaster@domain.com'
 
 Gitlab server with LDAP authentication
+
+.. code-block:: yaml
 
     gitlab:
       server:
@@ -63,13 +69,35 @@ Gitlab server with LDAP authentication
         mail_from: 'gitlab@domain.com'
         support_email: 'webmaster@domain.com'
 
-Gitlab repository enforcement from client side using token with import url repository and deploy keys and hooks
+Gitlab client resources
+-----------------------
+
+Gitlab groups/namespaces
+
+.. code-block:: yaml
 
     gitlab:
       client:
         enabled: true
         server:
-          host: repo.domain.com
+          url: http:/repo.domain.com/
+          token: fdsfdsfdsfdsfds
+        group:
+          hovno53:
+            enabled: true
+            description: some tex2
+
+Gitlab repository enforcement from client side using token with import url
+repository and deploy keys and hooks.
+
+
+.. code-block:: yaml
+
+    gitlab:
+      client:
+        enabled: true
+        server:
+          url: http:/repo.domain.com/
           token: fdsfdsfdsfdsfds
         repository:
           name-space/repo-name:
@@ -85,14 +113,19 @@ Gitlab repository enforcement from client side using token with import url repos
                 enabled: true
                 address: http://ci-tool/
 
+
 Usage
 =====
 
 The following rake task will resync all of the SSH keys.
 
+.. code-block:: bash
+
     sudo -u git -H bundle exec rake gitlab:shell:setup RAILS_ENV=production
 
 The following rake task will recreate all of the satellites.
+
+.. code-block:: bash
 
     sudo -u git -H bundle exec rake gitlab:satellites:create RAILS_ENV=production
 
