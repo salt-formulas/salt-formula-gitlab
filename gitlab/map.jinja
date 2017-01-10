@@ -42,7 +42,7 @@
 
 {% set client = salt['grains.filter_by']({
     'default': {
-        'pkg': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"]
+        'pkg': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"],
         'pip: "python-gitlab"
     },
 }, merge=salt['pillar.get']('gitlab:client')) %}
