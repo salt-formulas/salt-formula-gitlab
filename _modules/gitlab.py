@@ -352,6 +352,10 @@ def project_create(path_with_namespace, description="", default_branch="master",
         'description': description,
         'default_branch': default_branch
     }
+
+    if 'import_url' in kwargs:
+        new_project_data['import_url'] = kwargs['import_url']
+
     new_project = gitlab.projects.create(new_project_data)
     if not new_project:
         return {'Error': 'Error creating project %s' % path_with_namespace}
