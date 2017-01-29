@@ -1,15 +1,21 @@
 
-======
-Gitlab
-======
+==============
+Gitlab formula
+==============
 
-Gitlab is a free git repository management application based on Ruby on Rails. It is distributed under the MIT License and its source code can be found on Github. It is a very active project with a monthly release cycle and ideal for businesses that want to keep their code private. Consider it as a self hosted Github but open source.
+Gitlab is a free git repository management application based on Ruby on Rails.
+It is distributed under the MIT License and its source code can be found on
+Github. It is a very active project with a monthly release cycle and ideal for
+businesses that want to keep their code private. Consider it as a self hosted
+Github but open source.
 
 Sample pillars
 ==============
 
-Gitlab server resources
------------------------
+Server role
+-----------
+
+.. code-block:: yaml
 
 Gitlab server with local MTA and MySQL database
 
@@ -69,8 +75,8 @@ Gitlab server with LDAP authentication
         mail_from: 'gitlab@domain.com'
         support_email: 'webmaster@domain.com'
 
-Gitlab client resources
------------------------
+Client role
+-----------
 
 Gitlab groups/namespaces
 
@@ -89,7 +95,6 @@ Gitlab groups/namespaces
 
 Gitlab repository enforcement from client side using token with import url
 repository and deploy keys and hooks.
-
 
 .. code-block:: yaml
 
@@ -112,22 +117,6 @@ repository and deploy keys and hooks.
               hookname:
                 enabled: true
                 address: http://ci-tool/
-
-
-Usage
-=====
-
-The following rake task will resync all of the SSH keys.
-
-.. code-block:: bash
-
-    sudo -u git -H bundle exec rake gitlab:shell:setup RAILS_ENV=production
-
-The following rake task will recreate all of the satellites.
-
-.. code-block:: bash
-
-    sudo -u git -H bundle exec rake gitlab:satellites:create RAILS_ENV=production
 
 Read more
 =========
