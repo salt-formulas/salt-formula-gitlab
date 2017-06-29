@@ -1,0 +1,6 @@
+applications:
+- gitlab
+parameters:
+  gitlab:
+    client:
+      enabled: true

@@ -2,27 +2,7 @@
 
 {%- set version = pillar.gitlab.server.get('version', '6.5') %}
 
-{%- if version == '6.0' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.1' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.2' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.3' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.4' %}
-{%- set shell_version = '1.8.0' %}
-{%- elif version == '6.5' %}
-{%- set shell_version = '1.8.0' %}
-{%- elif version == '6.6' %}
-{%- set shell_version = '1.9' %}
-{%- elif version == '7.2' %}
-{%- set shell_version = '2.0' %}
-{%- elif version == '7.3' %}
-{%- set shell_version = '2.0.1' %}
-{%- elif version == '7.4' %}
-{%- set shell_version = '2.0.1' %}
-{%- elif version == '7.7' %}
+{%- if version == '7.7' %}
 {%- set shell_version = '2.4.1' %}
 {%- else %}
 {%- set shell_version = '2.4.1' %}
@@ -43,7 +23,6 @@
 
 {% set client = salt['grains.filter_by']({
     'default': {
-        'source_pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"],
         'pkgs': ["python-gitlab"]
     },
 }, merge=salt['pillar.get']('gitlab:client')) %}
