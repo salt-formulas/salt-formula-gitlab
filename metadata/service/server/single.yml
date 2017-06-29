@@ -5,6 +5,8 @@ parameters:
     server:
       enabled: true
       server_name: ${_param:gitlab_server_name}
+      source:
+        engine: pkg
       database:
         engine: postgresql
         host: 127.0.0.1
