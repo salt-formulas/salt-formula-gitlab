@@ -409,7 +409,7 @@ gitlab_rails['smtp_tls'] = {{ server.mail.use_tls|lower }}
 # registry_external_url 'https://registry.gitlab.example.com'
 
 ### Settings used by GitLab application
-# gitlab_rails['registry_enabled'] = true
+gitlab_rails['registry_enabled'] = false
 # gitlab_rails['registry_host'] = "registry.gitlab.example.com"
 # gitlab_rails['registry_port'] = "5005"
 # gitlab_rails['registry_path'] = "/var/opt/gitlab/gitlab-rails/shared/registry"
@@ -421,7 +421,7 @@ gitlab_rails['smtp_tls'] = {{ server.mail.use_tls|lower }}
 # gitlab_rails['registry_issuer'] = "omnibus-gitlab-issuer"
 
 ### Settings used by Registry application
-# registry['enable'] = true
+registry['enable'] = false
 # registry['username'] = "registry"
 # registry['group'] = "registry"
 # registry['uid'] = nil
@@ -896,7 +896,7 @@ nginx['enable'] = false
 ##! Docs: https://docs.gitlab.com/omnibus/settings/logs.html#logrotate
 ##! You can disable built in logrotate feature.
 ################################################################################
-# logrotate['enable'] = true
+logrotate['enable'] = true
 
 ################################################################################
 ## Users and groups accounts
@@ -905,7 +905,7 @@ nginx['enable'] = false
 ##! Docs: https://docs.gitlab.com/omnibus/settings/configuration.html#disable-user-and-group-account-management
 ################################################################################
 
-# manage_accounts['enable'] = false
+manage_accounts['enable'] = false
 
 ################################################################################
 ## Storage directories
@@ -948,7 +948,7 @@ nginx['enable'] = false
 
 ##! Define to enable GitLab Pages
 # pages_external_url "http://pages.example.com/"
-# gitlab_pages['enable'] = false
+gitlab_pages['enable'] = false
 
 ##! Configure to expose GitLab Pages on external IP address, serving the HTTP
 # gitlab_pages['external_http'] = []
@@ -1253,7 +1253,7 @@ prometheus['enable'] = false
 ##! Docs: https://docs.gitlab.com/ce/administration/monitoring/prometheus/node_exporter.html
 ################################################################################
 
-# node_exporter['enable'] = true
+node_exporter['enable'] = false
 # node_exporter['home'] = '/var/opt/gitlab/node-exporter'
 # node_exporter['log_directory'] = '/var/log/gitlab/node-exporter'
 # node_exporter['flags'] = {
@@ -1268,7 +1268,7 @@ prometheus['enable'] = false
 ##! Docs: https://docs.gitlab.com/ce/administration/monitoring/prometheus/redis_exporter.html
 ################################################################################
 
-# redis_exporter['enable'] = true
+redis_exporter['enable'] = false
 # redis_exporter['log_directory'] = '/var/log/gitlab/redis-exporter'
 # redis_exporter['flags'] = {
 #   'redis.addr' => "unix://#{node['gitlab']['gitlab-rails']['redis_socket']}",
@@ -1282,7 +1282,7 @@ prometheus['enable'] = false
 ##! Docs: https://docs.gitlab.com/ce/administration/monitoring/prometheus/postgres_exporter.html
 ################################################################################
 
-# postgres_exporter['enable'] = true
+postgres_exporter['enable'] = false
 # postgres_exporter['home'] = '/var/opt/gitlab/postgres-exporter'
 # postgres_exporter['log_directory'] = '/var/log/gitlab/postgres-exporter'
 # postgres_exporter['flags'] = {}
@@ -1303,7 +1303,7 @@ prometheus['enable'] = false
 # gitlab_monitor['listen_port'] = '9168'
 
 # To completely disable prometheus, and all of it's exporters, set to false
-# prometheus_monitoring['enable'] = true
+prometheus_monitoring['enable'] = false
 
 ################################################################################
 ## Gitaly
@@ -1311,7 +1311,7 @@ prometheus['enable'] = false
 ################################################################################
 
 
-# gitaly['enable'] = false
+gitaly['enable'] = false
 # gitaly['dir'] = "/var/opt/gitlab/gitaly"
 # gitaly['log_directory'] = "/var/log/gitlab/gitaly"
 # gitaly['bin_path'] = "/opt/gitlab/embedded/bin/gitaly"
