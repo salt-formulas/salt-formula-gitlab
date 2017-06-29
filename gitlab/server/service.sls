@@ -3,9 +3,9 @@
 
 include:
 {%- if server.source.engine == 'pkg' %}
-- gerrit.server._service_pkg
+- gitlab.server._service_pkg
 {%- else %}
-- gerrit.server._service_src
+- gitlab.server._service_src
 {%- endif %}
 
 {%- if server.initial_data is defined %}
