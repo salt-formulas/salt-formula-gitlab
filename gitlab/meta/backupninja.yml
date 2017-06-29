@@ -1,0 +1,4 @@
+backup:
+  gitlab:
+    fs_includes:
+    - /srv/leonardo/sites/{{ app_name }}/media

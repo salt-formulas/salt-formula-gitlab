@@ -34,7 +34,8 @@
         'version': version,
         'shell_version': shell_version,
         'repository': {},
-        'pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libgdbm-dev", "libreadline-dev", "libncurses5-dev", "libffi-dev", "checkinstall", "libxml2-dev", "libxslt1-dev",  "libmysqlclient-dev", "libpq-dev", "libcurl4-openssl-dev", "libicu-dev", "curl", "python-docutils", "cmake"]
+        'pkgs': ['gitlab-ce'],
+        'source_pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libgdbm-dev", "libreadline-dev", "libncurses5-dev", "libffi-dev", "checkinstall", "libxml2-dev", "libxslt1-dev",  "libmysqlclient-dev", "libpq-dev", "libcurl4-openssl-dev", "libicu-dev", "curl", "python-docutils", "cmake"]
     },
 }, merge=salt['pillar.get']('gitlab:server')) %}
 
@@ -42,7 +43,7 @@
 
 {% set client = salt['grains.filter_by']({
     'default': {
-        'pkg': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"],
-        'pip': "python-gitlab"
+        'source_pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"],
+        'pkgs': ["python-gitlab"]
     },
 }, merge=salt['pillar.get']('gitlab:client')) %}

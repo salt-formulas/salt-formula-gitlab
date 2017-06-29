@@ -4,11 +4,10 @@
 include:
 - git
 - ruby
-- gitlab.server.repository
 
 gitlab_packages:
   pkg.installed:
-  - names: {{ server.pkgs }}
+  - names: {{ server.source_pkgs }}
 
 gitlab_user:
   user.present:
