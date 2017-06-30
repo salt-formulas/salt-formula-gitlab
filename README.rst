@@ -15,9 +15,9 @@ Sample metadata
 Server role
 -----------
 
-.. code-block:: yaml
+Gitlab server with local MTA and PostgreSQL database
 
-Gitlab server with local MTA and MySQL database
+.. code-block:: yaml
 
     gitlab:
       server:
@@ -26,7 +26,7 @@ Gitlab server with local MTA and MySQL database
         source:
           engine: pkg
         database:
-          engine: 'mysql'
+          engine: 'postgresql'
           host: 'locslhost'
           name: 'gitlab'
           password: 'LfTno5mYdZmRfoPV'
@@ -51,8 +51,6 @@ Gitlab server from custom source code repository
           engine: git
           host: git://git.domain.com
         server_name: 'repo.domain.com'
-        mail_from: 'gitlab@domain.com'
-        support_email: 'webmaster@domain.com'
 
 Gitlab server with LDAP authentication
 
@@ -62,6 +60,7 @@ Gitlab server with LDAP authentication
       server:
         enabled: true
         version: '6.2'
+        server_name: 'repo1.domain.com'
         identity:
           engine: ldap
           host: lda.domain.com
@@ -71,9 +70,6 @@ Gitlab server with LDAP authentication
           method: plain
           bind_dn: uid=ldap,ou=Users,dc=domain,dc=com
           password: pwd
-        server_name: 'repo1.domain.com'
-        mail_from: 'gitlab@domain.com'
-        support_email: 'webmaster@domain.com'
 
 
 Client role
@@ -94,8 +90,8 @@ Gitlab groups/namespaces
             enabled: true
             description: some tex2
 
-Gitlab repository enforcement from client side using token with import url
-repository and deploy keys and hooks.
+Gitlab repository enforcement with import url repository and deploy keys and
+hooks.
 
 .. code-block:: yaml
 
