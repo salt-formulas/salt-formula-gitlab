@@ -1,0 +1,8 @@
+applications:
+- gitlab
+classes:
+- service.gitlab.support
+parameters:
+  gitlab:
+    client:
+      enabled: true

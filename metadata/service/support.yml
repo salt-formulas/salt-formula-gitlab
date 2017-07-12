@@ -1,0 +1,17 @@
+parameters:
+  gitlab:
+    _support:
+      backupninja:
+        enabled: true
+      collectd:
+        enabled: false
+      heka:
+        enabled: false
+      sensu:
+        enabled: false
+      sphinx:
+        enabled: false
+      config:
+        enabled: false
+      grafana:
+        enabled: false

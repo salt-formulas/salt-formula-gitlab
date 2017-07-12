@@ -1,3 +1,4 @@
+{%- from "gitlab/map.jinja" import server with context %}
 # # # # # # # # # # # # # # # # # #
 # GitLab application config file  #
 # # # # # # # # # # # # # # # # # #
@@ -15,7 +16,7 @@ production: &base
   ## GitLab settings
   gitlab:
     ## Web server settings
-    host: {{ pillar.gitlab.server.server_name }}
+    host: {{ server.server_name }}
     port: 443
     https: true
 
@@ -33,10 +34,10 @@ production: &base
 
     ## Email settings
     # Email address used in the "From" field in mails sent by GitLab
-    email_from: {{ pillar.gitlab.server.mail_from }}
+    email_from: {{ server.mail_from }}
 
     # Email address of your support contact (default: same as email_from)
-    support_email: {{ pillar.gitlab.server.support_email }}
+    support_email: {{ server.support_email }}
 
     ## User settings
     default_projects_limit: 10
@@ -108,8 +109,8 @@ production: &base
   #
   # 2. Auth settings
   # ==========================
-  {% if pillar.gitlab.server.identity is defined %}
-  {% set identity = pillar.gitlab.server.identity %}
+  {% if server.identity is defined %}
+  {% set identity = server.identity %}
   {% if identity.engine == 'ldap' %}
   ## LDAP settings
   ldap:

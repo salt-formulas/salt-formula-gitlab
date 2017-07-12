@@ -20,7 +20,6 @@ Module for handling Gitlab calls.
 from __future__ import absolute_import
 
 import logging
-import os
 
 LOG = logging.getLogger(__name__)
 
@@ -81,7 +80,8 @@ def _get_project(gitlab, path_with_namespace):
                 break
         page += 1
         projects = git.getprojectsall(page=page, per_page=PER_PAGE)
-        if len(projects) == 0: break
+        if len(projects) == 0:
+            break
     return selected_project
 
 
@@ -89,13 +89,13 @@ def auth(**kwargs):
     '''
     Set up gitlab authenticated client
     '''
-   
+
     prefix = "gitlab."
 
     # look in kwargs first, then default to config file
     def get_key(key, default=None):
         return kwargs.get('connection_' + key,
-            __salt__['config.get'](prefix + key, default))
+                          __salt__['config.get'](prefix + key, default))
 
     user = get_key('user', 'admin')
     password = get_key('password', 'ADMIN')
@@ -115,7 +115,7 @@ def hook_get(path_with_namespace, hook_url, **kwargs):
     Return a specific hook for gitlab repository
 
     CLI Example:
- 
+
     .. code-block:: bash
 
         salt '*' gitlab.endpoint_get nova
@@ -155,8 +155,8 @@ def hook_list(project, **kwargs):
     return ret
 
 
-def hook_create(hook_url, issues_events=False, merge_requests_events=False, \
-    push_events=False, project_id=None, project_name=None, **kwargs):
+def hook_create(hook_url, issues_events=False, merge_requests_events=False,
+                push_events=False, project_id=None, project_name=None, **kwargs):
     '''
     Create an hook for a project
 
@@ -177,7 +177,7 @@ def hook_create(hook_url, issues_events=False, merge_requests_events=False, \
     for hook in git.getprojecthooks(project.get('id')):
         if hook.get('url') == hook_url:
             create = False
-    if create:  
+    if create:
         git.addprojecthook(project['id'], hook_url)
     return hook_get(hook_url, project_id=project['id'])
 
@@ -381,7 +381,7 @@ def project_delete(path_with_namespace, **kwargs):
     if not path_with_namespace in projects:
         LOG.info("Project {0} does not exist".format(path_with_namespace))
         return ret
-    else: 
+    else:
         gitlab.projects.delete(projects[path_with_namespace]["id"])
         ret = 'Project {0} deleted'.format(path_with_namespace)
         return ret
@@ -402,7 +402,7 @@ def project_get(path_with_namespace, **kwargs):
     ret = {}
     projects = project_list(**kwargs)
     if path_with_namespace in projects:
-      ret[path_with_namespace] = projects.get(path_with_namespace)
+        ret[path_with_namespace] = projects.get(path_with_namespace)
     if len(ret) == 0:
         return {'Error': 'Error in retrieving project'}
     return ret
@@ -443,7 +443,7 @@ def project_update(path_with_namespace=None, **kwargs):
         project = project_get(name)
     project = project_get(name=name)
     if not project.has_key('Error'):
-      project = project[name.split("/")[1]]
+        project = project[name.split("/")[1]]
     if description == None:
         description = project['description']
     if default_branch == None:
@@ -483,7 +483,7 @@ def group_get(name, **kwargs):
     ret = {}
     groups = group_list(**kwargs)
     if name in groups:
-      ret[name] = groups.get(name)
+        ret[name] = groups.get(name)
     if len(ret) == 0:
         return {'Error': 'Error in retrieving group'}
     return ret
@@ -541,8 +541,7 @@ def group_delete(name, **kwargs):
     if not name in groups:
         LOG.info("Group {0} does not exist".format(name))
         return ret
-    else: 
+    else:
         gitlab.groups.delete(groups[name]['id'])
         ret = 'Group {0} deleted'.format(name)
         return ret
-

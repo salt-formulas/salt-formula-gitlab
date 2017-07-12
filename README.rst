@@ -9,25 +9,24 @@ Github. It is a very active project with a monthly release cycle and ideal for
 businesses that want to keep their code private. Consider it as a self hosted
 Github but open source.
 
-Sample pillars
-==============
+Sample metadata
+===============
 
 Server role
 -----------
 
-.. code-block:: yaml
+Gitlab server with local MTA and PostgreSQL database
 
-Gitlab server with local MTA and MySQL database
+.. code-block:: yaml
 
     gitlab:
       server:
         enabled: true
-        version: '6.5'
         server_name: 'repo1.domain.com'
-        mail_from: 'gitlab@domain.com'
-        support_email: 'webmaster@domain.com'
+        source:
+          engine: pkg
         database:
-          engine: 'mysql'
+          engine: 'postgresql'
           host: 'locslhost'
           name: 'gitlab'
           password: 'LfTno5mYdZmRfoPV'
@@ -38,6 +37,8 @@ Gitlab server with local MTA and MySQL database
           port: 25
           domain: 'domain.com'
           use_tls: false
+          from: 'gitlab@domain.com'
+          no_reply: 'no-reply@domain.com'
 
 Gitlab server from custom source code repository
 
@@ -46,13 +47,10 @@ Gitlab server from custom source code repository
     gitlab:
       server:
         enabled: true
-        version: '8.12'
         source:
           engine: git
           host: git://git.domain.com
-        server_name: 'repo1.domain.com'
-        mail_from: 'gitlab@domain.com'
-        support_email: 'webmaster@domain.com'
+        server_name: 'repo.domain.com'
 
 Gitlab server with LDAP authentication
 
@@ -62,6 +60,7 @@ Gitlab server with LDAP authentication
       server:
         enabled: true
         version: '6.2'
+        server_name: 'repo1.domain.com'
         identity:
           engine: ldap
           host: lda.domain.com
@@ -71,9 +70,7 @@ Gitlab server with LDAP authentication
           method: plain
           bind_dn: uid=ldap,ou=Users,dc=domain,dc=com
           password: pwd
-        server_name: 'repo1.domain.com'
-        mail_from: 'gitlab@domain.com'
-        support_email: 'webmaster@domain.com'
+
 
 Client role
 -----------
@@ -93,8 +90,8 @@ Gitlab groups/namespaces
             enabled: true
             description: some tex2
 
-Gitlab repository enforcement from client side using token with import url
-repository and deploy keys and hooks.
+Gitlab repository enforcement with import url repository and deploy keys and
+hooks.
 
 .. code-block:: yaml
 
@@ -118,8 +115,9 @@ repository and deploy keys and hooks.
                 enabled: true
                 address: http://ci-tool/
 
-Read more
-=========
+
+More information
+================
 
 * https://github.com/gitlabhq/gitlabhq/blob/6-1-stable/doc/install/installation.md
 * https://github.com/gitlabhq/gitlabhq/blob/master/doc/update/6.0-to-6.1.md
@@ -127,6 +125,7 @@ Read more
 * https://wiki.archlinux.org/index.php/gitlab
 * https://github.com/gitlabhq/gitlabhq/issues/6687
 * https://github.com/gitlabhq/gitlab-public-wiki/wiki/Trouble-Shooting-Guide
+
 
 Documentation and Bugs
 ======================

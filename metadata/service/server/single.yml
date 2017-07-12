@@ -1,24 +1,25 @@
 applications:
 - gitlab
+classes:
+- service.gitlab.support
 parameters:
-  _param:
-    gitlab_server_version: '7.5'
   gitlab:
     server:
       enabled: true
-      version: ${_param:gitlab_server_version}
       server_name: ${_param:gitlab_server_name}
-      mail_from: ${_param:gitlab_server_email}
-      support_email: ${_param:gitlab_server_email}
+      source:
+        engine: pkg
       database:
-        engine: 'mysql'
-        host: '127.0.0.1'
-        name: 'gitlab'
-        password: ${_param:mysql_gitlab_password}
-        user: 'gitlab'
+        engine: postgresql
+        host: 127.0.0.1
+        name: gitlab
+        password: ${_param:postgresql_gitlab_password}
+        user: gitlab
       mail:
         engine: smtp
         host: localhost
         port: 25
         domain: webapp.domain.com
+        from: ${_param:gitlab_server_email}
+        reply_to: ${_param:gitlab_server_email}
         use_tls: false

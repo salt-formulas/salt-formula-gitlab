@@ -4,11 +4,10 @@
 include:
 - git
 - ruby
-- gitlab.server.repository
 
 gitlab_packages:
   pkg.installed:
-  - names: {{ server.pkgs }}
+  - names: {{ server.source_pkgs }}
 
 gitlab_user:
   user.present:
@@ -22,9 +21,9 @@ gitlab_user:
   - group: git
   - mode: 755
   - makedirs: True
-  require:
-  - user: gitlab_user
-  - pkg: ruby_packages
+  - require:
+    - user: gitlab_user
+    - pkg: ruby_packages
 
 gitlab_repo:
   git.latest:
@@ -56,7 +55,7 @@ gitlab_shell_repo:
 
 /srv/gitlab/gitlab-shell/config.yml:
   file.managed:
-  - source: salt://gitlab/conf/config.yml
+  - source: salt://gitlab/files/config/config.yml
   - template: jinja
   - require:
     - git: gitlab_shell_repo
@@ -74,28 +73,28 @@ install_gitlab_shell:
 
 /srv/gitlab/gitlab/config/gitlab.yml:
   file.managed:
-  - source: salt://gitlab/conf/gitlab.yml
+  - source: salt://gitlab/files/config/gitlab.yml
   - template: jinja
   - require:
     - cmd: install_gitlab_shell
 
 /srv/gitlab/gitlab/config/database.yml:
   file.managed:
-  - source: salt://gitlab/conf/database.yml
+  - source: salt://gitlab/files/config/database.yml
   - template: jinja
   - require:
     - cmd: install_gitlab_shell
 
 /srv/gitlab/gitlab/config/unicorn.rb:
   file.managed:
-  - source: salt://gitlab/conf/unicorn.rb
+  - source: salt://gitlab/files/config/unicorn.rb
   - template: jinja
   - require:
     - cmd: install_gitlab_shell
 
 /etc/init.d/gitlab:
   file.managed:
-  - source: salt://gitlab/conf/gitlab
+  - source: salt://gitlab/files/config/gitlab
   - template: jinja
   - mode: 755
   - require:
@@ -121,7 +120,7 @@ gitlab_dirs:
 
 /srv/gitlab/gitlab/.secret:
   file.managed:
-  - source: salt://gitlab/conf/secret
+  - source: salt://gitlab/files/config/secret
   - template: jinja
   - user: git
   - group: git
@@ -131,7 +130,7 @@ gitlab_dirs:
 
 /srv/gitlab/gitlab/.gitlab_shell_secret:
   file.managed:
-  - source: salt://gitlab/conf/secret
+  - source: salt://gitlab/files/config/secret
   - template: jinja
   - user: git
   - group: git
@@ -149,7 +148,7 @@ gitlab_dirs:
 
 /srv/gitlab/gitlab/config/environments/production.rb:
   file.managed:
-  - source: salt://gitlab/conf/environment.rb
+  - source: salt://gitlab/files/config/environment.rb
   - template: jinja
   - user: git
   - group: git
@@ -263,7 +262,7 @@ gitlab_backup_dirs:
   file.managed:
   - user: root
   - group: root
-  - source: salt://gitlab/conf/restore.sh
+  - source: salt://gitlab/files/config/restore.sh
   - mode: 700
   - template: jinja
   - require:

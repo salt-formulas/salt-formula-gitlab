@@ -1,0 +1,2 @@
+include:
+- gitlab.server.service
