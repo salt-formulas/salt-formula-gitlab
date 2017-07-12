@@ -1,5 +1,7 @@
 applications:
 - gitlab
+classes:
+- service.gitlab.support
 parameters:
   gitlab:
     server:

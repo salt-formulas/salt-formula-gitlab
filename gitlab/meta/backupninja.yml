@@ -1,4 +1,5 @@
 backup:
   gitlab:
     fs_includes:
-    - /srv/leonardo/sites/{{ app_name }}/media
+    - /var/opt/gitlab/backups
+    fs_excludes: []
