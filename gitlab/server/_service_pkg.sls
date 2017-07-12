@@ -20,4 +20,8 @@ gitlab_server_reconfigure:
     - file: /etc/gitlab/gitlab.rb
     - pkg: gitlab_server_packages
 
+{%- if server.initial_data is defined %}
+
+{%- endif %}
+
 {%- endif %}
