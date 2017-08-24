@@ -475,7 +475,7 @@ gitlab_workhorse['enable'] = true
 gitlab_workhorse['listen_network'] = "tcp"
 # gitlab_workhorse['listen_network'] = "unix"
 # gitlab_workhorse['listen_umask'] = 000
-gitlab_workhorse['listen_addr'] = "127.0.0.1:8181"
+gitlab_workhorse['listen_addr'] = "{{ server.workhorse_host }}:{{ server.workhorse_port }}"
 # gitlab_workhorse['listen_addr'] = "/var/opt/gitlab/gitlab-workhorse/socket"
 # gitlab_workhorse['auth_backend'] = "http://localhost:8080"
 
@@ -541,8 +541,8 @@ gitlab_workhorse['listen_addr'] = "127.0.0.1:8181"
 # unicorn['worker_processes'] = 2
 
 ### Advanced settings
-# unicorn['listen'] = '127.0.0.1'
-# unicorn['port'] = 8080
+unicorn['listen'] = '{{ server.unicorn_host }}'
+unicorn['port'] = {{ server.unicorn_port }}
 # unicorn['socket'] = '/var/opt/gitlab/gitlab-rails/sockets/gitlab.socket'
 # unicorn['pidfile'] = '/opt/gitlab/var/unicorn/unicorn.pid'
 # unicorn['tcp_nopush'] = true
