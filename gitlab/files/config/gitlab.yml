@@ -123,6 +123,9 @@ production: &base
     bind_dn: {{ identity.get("bind_dn") }}
     password: {{ identity.get("password") }}
     allow_username_or_email_login: {{ identity.get("allow_username_or_email_login", "true")|replace("True","true")|replace("False", "false") }}
+    {% if identity.user_filter is defined %}
+    user_filter: '{{ identity.get("user_filter") }}'
+    {% endif %}
   {% else %}
   ldap:
     enabled: false

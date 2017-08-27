@@ -11,7 +11,7 @@
 ##! URL on which GitLab will be reachable.
 ##! For more details on configuring external_url see:
 ##! https://docs.gitlab.com/omnibus/settings/configuration.html#configuring-the-external-url-for-gitlab
-external_url 'https://{{ server.server_name }}'
+external_url '{{ server.url }}'
 
 ## Legend
 ##! The following notations at the beginning of each line may be used to
@@ -98,7 +98,12 @@ gitlab_rails['gitlab_email_reply_to'] = '{{ server.mail.reply_to }}'
 ###! different machine.
 ###! **Add the IP address for your reverse proxy to the list, otherwise users
 ###!   will appear signed in from that address.**
-gitlab_rails['trusted_proxies'] = ['127.0.0.1/32']
+gitlab_rails['trusted_proxies'] = [
+  {% for proxy in server.trusted_proxies %}
+  '{{ proxy }}',
+  {% endfor %}
+   '127.0.0.1/32'
+]
 
 ### Reply by email
 ###! Allow users to comment on issues and merge requests by replying to
@@ -215,6 +220,29 @@ gitlab_rails['trusted_proxies'] = ['127.0.0.1/32']
 #     admin_group: ''
 #     sync_ssh_keys: false
 # EOS
+
+{% if server.identity is defined %}
+{% set identity = server.identity %}
+gitlab_rails['ldap_enabled'] = true
+{% if identity.engine == 'ldap' %}
+gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
+  ldap:
+    label: '{{ identity.get("label") }}'
+    enabled: true
+    host: '{{ identity.get("host") }}'
+    base: '{{ identity.get("base") }}'
+    port: {{ identity.get("port", 636) }}
+    uid: '{{ identity.get("uid") }}'
+    encryption: '{{ identity.get("method", "plain") }}'
+    bind_dn: '{{ identity.get("bind_dn") }}'
+    password: '{{ identity.get("password") }}'
+    allow_username_or_email_login: {{ identity.get("allow_username_or_email_login", "true")|replace("True","true")|replace("False", "false") }}
+    {% if identity.user_filter is defined %}
+    user_filter: '{{ identity.get("user_filter") }}'
+    {% endif %}
+EOS
+{% endif %}
+{% endif %}
 
 ### OmniAuth Settings
 ###! Docs: https://docs.gitlab.com/ce/integration/omniauth.html
