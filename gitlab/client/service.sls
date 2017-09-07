@@ -3,6 +3,6 @@
 
 gitlab_client_packages:
   pkg.installed:
-  - names: {{ client.pkg }}
+  - names: {{ client.pkgs }}
 
 {%- endif %}
