@@ -508,11 +508,7 @@ gitlab_workhorse['listen_network'] = "tcp"
 # gitlab_workhorse['listen_network'] = "unix"
 # gitlab_workhorse['listen_umask'] = 000
 
-{% if server.workhorse.bind is defined -%}
-gitlab_workhorse['listen_addr'] = "{{ server.workhorse.bind.get('host', '127.0.0.1') }}:{{ server.workhorse.bind.get('port', '8181') }}"
-{%- else %}
-gitlab_workhorse['listen_addr'] = "127.0.0.0.8181"
-{%- endif %}
+gitlab_workhorse['listen_addr'] = "{{ server.workhorse.bind.host }}:{{ server.workhorse.bind.port }}"
 
 # gitlab_workhorse['listen_addr'] = "/var/opt/gitlab/gitlab-workhorse/socket"
 # gitlab_workhorse['auth_backend'] = "http://localhost:8080"
@@ -580,10 +576,8 @@ gitlab_workhorse['listen_addr'] = "127.0.0.0.8181"
 
 ### Advanced settings
 
-{% if server.unicorn.bind is defined -%}
-unicorn['listen'] = "{{ server.unicorn.bind.get('host', '127.0.0.1') }}"
-unicorn['port'] = {{ server.unicorn.bind.get('port', '8080') }}
-{%- endif %}
+unicorn['listen'] = "{{ server.unicorn.bind.host }}"
+unicorn['port'] = {{ server.unicorn.bind.port }}
 # unicorn['socket'] = '/var/opt/gitlab/gitlab-rails/sockets/gitlab.socket'
 # unicorn['pidfile'] = '/opt/gitlab/var/unicorn/unicorn.pid'
 # unicorn['tcp_nopush'] = true
