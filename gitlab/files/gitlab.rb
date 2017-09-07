@@ -510,8 +510,10 @@ gitlab_workhorse['listen_network'] = "tcp"
 
 {% if server.workhorse.bind is defined -%}
 gitlab_workhorse['listen_addr'] = "{{ server.workhorse.bind.get('host', '127.0.0.1') }}:{{ server.workhorse.bind.get('port', '8181') }}"
+{%- else %}
+gitlab_workhorse['listen_addr'] = "127.0.0.0.8181"
 {%- endif %}
-"
+
 # gitlab_workhorse['listen_addr'] = "/var/opt/gitlab/gitlab-workhorse/socket"
 # gitlab_workhorse['auth_backend'] = "http://localhost:8080"
 
