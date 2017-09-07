@@ -11,7 +11,11 @@
 ##! URL on which GitLab will be reachable.
 ##! For more details on configuring external_url see:
 ##! https://docs.gitlab.com/omnibus/settings/configuration.html#configuring-the-external-url-for-gitlab
+{% if server.url is defined -%}
 external_url '{{ server.url }}'
+{%- else %}
+external_url 'https://{{ server.server_name }}'
+{%- endif %}
 
 ## Legend
 ##! The following notations at the beginning of each line may be used to
@@ -99,7 +103,7 @@ gitlab_rails['gitlab_email_reply_to'] = '{{ server.mail.reply_to }}'
 ###! **Add the IP address for your reverse proxy to the list, otherwise users
 ###!   will appear signed in from that address.**
 gitlab_rails['trusted_proxies'] = [
-  {% for proxy in server.trusted_proxies %}
+  {% for proxy in server.get('trusted_proxies', []) %}
   '{{ proxy }}',
   {% endfor %}
    '127.0.0.1/32'
@@ -236,7 +240,7 @@ gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
     encryption: '{{ identity.get("method", "plain") }}'
     bind_dn: '{{ identity.get("bind_dn") }}'
     password: '{{ identity.get("password") }}'
-    allow_username_or_email_login: {{ identity.get("allow_username_or_email_login", "true")|replace("True","true")|replace("False", "false") }}
+    allow_username_or_email_login: {{ identity.get("allow_username_or_email_login", "true")|lower }}
     {% if identity.user_filter is defined %}
     user_filter: '{{ identity.get("user_filter") }}'
     {% endif %}
@@ -503,7 +507,11 @@ gitlab_workhorse['enable'] = true
 gitlab_workhorse['listen_network'] = "tcp"
 # gitlab_workhorse['listen_network'] = "unix"
 # gitlab_workhorse['listen_umask'] = 000
-gitlab_workhorse['listen_addr'] = "{{ server.workhorse_host }}:{{ server.workhorse_port }}"
+
+{% if server.workhorse.bind is defined -%}
+gitlab_workhorse['listen_addr'] = "{{ server.workhorse.bind.get('host', '127.0.0.1') }}:{{ server.workhorse.bind.get('port', '8181') }}"
+{%- endif %}
+"
 # gitlab_workhorse['listen_addr'] = "/var/opt/gitlab/gitlab-workhorse/socket"
 # gitlab_workhorse['auth_backend'] = "http://localhost:8080"
 
@@ -569,8 +577,11 @@ gitlab_workhorse['listen_addr'] = "{{ server.workhorse_host }}:{{ server.workhor
 # unicorn['worker_processes'] = 2
 
 ### Advanced settings
-unicorn['listen'] = '{{ server.unicorn_host }}'
-unicorn['port'] = {{ server.unicorn_port }}
+
+{% if server.unicorn.bind is defined -%}
+unicorn['listen'] = "{{ server.unicorn.bind.get('host', '127.0.0.1') }}"
+unicorn['port'] = {{ server.unicorn.bind.get('port', '8080') }}
+{%- endif %}
 # unicorn['socket'] = '/var/opt/gitlab/gitlab-rails/sockets/gitlab.socket'
 # unicorn['pidfile'] = '/opt/gitlab/var/unicorn/unicorn.pid'
 # unicorn['tcp_nopush'] = true
