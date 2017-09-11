@@ -11,7 +11,11 @@
 ##! URL on which GitLab will be reachable.
 ##! For more details on configuring external_url see:
 ##! https://docs.gitlab.com/omnibus/settings/configuration.html#configuring-the-external-url-for-gitlab
+{% if server.url is defined -%}
+external_url '{{ server.url }}'
+{%- else %}
 external_url 'https://{{ server.server_name }}'
+{%- endif %}
 
 ## Legend
 ##! The following notations at the beginning of each line may be used to
@@ -98,7 +102,12 @@ gitlab_rails['gitlab_email_reply_to'] = '{{ server.mail.reply_to }}'
 ###! different machine.
 ###! **Add the IP address for your reverse proxy to the list, otherwise users
 ###!   will appear signed in from that address.**
-gitlab_rails['trusted_proxies'] = ['127.0.0.1/32']
+gitlab_rails['trusted_proxies'] = [
+  {% for proxy in server.get('trusted_proxies', []) %}
+  '{{ proxy }}',
+  {% endfor %}
+   '127.0.0.1/32'
+]
 
 ### Reply by email
 ###! Allow users to comment on issues and merge requests by replying to
@@ -215,6 +224,29 @@ gitlab_rails['trusted_proxies'] = ['127.0.0.1/32']
 #     admin_group: ''
 #     sync_ssh_keys: false
 # EOS
+
+{% if server.identity is defined %}
+{% set identity = server.identity %}
+gitlab_rails['ldap_enabled'] = true
+{% if identity.engine == 'ldap' %}
+gitlab_rails['ldap_servers'] = YAML.load <<-'EOS'
+  ldap:
+    label: '{{ identity.get("label") }}'
+    enabled: true
+    host: '{{ identity.get("host") }}'
+    base: '{{ identity.get("base") }}'
+    port: {{ identity.get("port", 636) }}
+    uid: '{{ identity.get("uid") }}'
+    encryption: '{{ identity.get("method", "plain") }}'
+    bind_dn: '{{ identity.get("bind_dn") }}'
+    password: '{{ identity.get("password") }}'
+    allow_username_or_email_login: {{ identity.get("allow_username_or_email_login", "true")|lower }}
+    {% if identity.user_filter is defined %}
+    user_filter: '{{ identity.get("user_filter") }}'
+    {% endif %}
+EOS
+{% endif %}
+{% endif %}
 
 ### OmniAuth Settings
 ###! Docs: https://docs.gitlab.com/ce/integration/omniauth.html
@@ -475,7 +507,9 @@ gitlab_workhorse['enable'] = true
 gitlab_workhorse['listen_network'] = "tcp"
 # gitlab_workhorse['listen_network'] = "unix"
 # gitlab_workhorse['listen_umask'] = 000
-gitlab_workhorse['listen_addr'] = "127.0.0.1:8181"
+
+gitlab_workhorse['listen_addr'] = "{{ server.workhorse.bind.host }}:{{ server.workhorse.bind.port }}"
+
 # gitlab_workhorse['listen_addr'] = "/var/opt/gitlab/gitlab-workhorse/socket"
 # gitlab_workhorse['auth_backend'] = "http://localhost:8080"
 
@@ -541,8 +575,9 @@ gitlab_workhorse['listen_addr'] = "127.0.0.1:8181"
 # unicorn['worker_processes'] = 2
 
 ### Advanced settings
-# unicorn['listen'] = '127.0.0.1'
-# unicorn['port'] = 8080
+
+unicorn['listen'] = "{{ server.unicorn.bind.host }}"
+unicorn['port'] = {{ server.unicorn.bind.port }}
 # unicorn['socket'] = '/var/opt/gitlab/gitlab-rails/sockets/gitlab.socket'
 # unicorn['pidfile'] = '/opt/gitlab/var/unicorn/unicorn.pid'
 # unicorn['tcp_nopush'] = true
