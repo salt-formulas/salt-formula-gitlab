@@ -10,6 +10,6 @@ Vcs-Git: https://github.com/tcpcloud/salt-formula-gitlab.git
 
 Package: salt-formula-gitlab
 Architecture: all
-Depends: ${misc:Depends}, salt-master, reclass
+Depends: ${misc:Depends}
 Description: Gitlab salt formula
  Install and configure Gitlab service.
