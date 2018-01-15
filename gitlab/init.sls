@@ -6,4 +6,7 @@ include:
 {%- if pillar.gitlab.client is defined %}
 - gitlab.client
 {%- endif %}
+{%- if pillar.gitlab.runner is defined %}
+- gitlab.runner
+{%- endif %}
 {%- endif %}

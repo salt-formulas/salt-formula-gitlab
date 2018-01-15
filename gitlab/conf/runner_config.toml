@@ -1,0 +1,22 @@
+{%- from "gitlab/map.jinja" import runner with context -%}
+concurrent = {{ runner.concurrent }}
+check_interval = {{ runner.check_interval }}
+
+[[runners]]
+  name = "{{ runner.name }}"
+  url = "{{ runner.url }}"
+  token = "{{ runner.token }}"
+  executor = "{{ runner.executor }}"
+
+  {%- if runner.executor == "docker" %}
+  [runners.docker]
+    tls_verify = false
+    image = "{{ runner.image }}"
+    privileged = false
+    disable_cache = false
+    {%- if 'volumes' in runner %}
+    volumes = ["{{ runner.volumes|join('", "') }}"]
+    {%- else %}
+    volumes = []
+    {%- endif %}
+  {%- endif %}
