@@ -15,6 +15,9 @@
         'shell_version': shell_version,
         'repository': {},
         'pkgs': ['gitlab-ce'],
+        'source': {
+          'engine': 'pkg',
+        },
         'source_pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libgdbm-dev", "libreadline-dev", "libncurses5-dev", "libffi-dev", "checkinstall", "libxml2-dev", "libxslt1-dev",  "libmysqlclient-dev", "libpq-dev", "libcurl4-openssl-dev", "libicu-dev", "curl", "python-docutils", "cmake"],
         'workhorse': {
           'bind': {
@@ -40,3 +43,10 @@ Debian:
   - python-gitlab
 {%- endload %}
 {% set client = salt['grains.filter_by'](client_defaults, merge=salt['pillar.get']('gitlab:client')) %}
+
+{% set runner = salt['grains.filter_by']({
+    'default': {
+        'concurrent': 3,
+        'check_interval': 0
+    }
+}, merge=salt['pillar.get']('gitlab:runner')) %}
