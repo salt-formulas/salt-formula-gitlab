@@ -1346,7 +1346,7 @@ prometheus_monitoring['enable'] = false
 ################################################################################
 
 
-gitaly['enable'] = false
+gitaly['enable'] = true
 # gitaly['dir'] = "/var/opt/gitlab/gitaly"
 # gitaly['log_directory'] = "/var/log/gitlab/gitaly"
 # gitaly['bin_path'] = "/opt/gitlab/embedded/bin/gitaly"
