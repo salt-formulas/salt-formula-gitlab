@@ -324,6 +324,15 @@ gitlab_rails['omniauth_enabled'] = false
 # gitlab_rails['extra_piwik_site_id'] = '_your_piwik_site_id'
 
 ##! Docs: https://docs.gitlab.com/omnibus/settings/environment-variables.html
+
+{% if server.proxy is defined -%}
+gitlab_rails['env'] = {
+    "http_proxy" => "{{ server.proxy.http_proxy }}",
+    "https_proxy" => "{{ server.proxy.https_proxy }}",
+    "no_proxy" => "{{ server.proxy.no_proxy }}"
+}
+{% endif -%}
+
 # gitlab_rails['env'] = {
 #   'BUNDLE_GEMFILE' => "/opt/gitlab/embedded/service/gitlab-rails/Gemfile",
 #   'PATH' => "/opt/gitlab/bin:/opt/gitlab/embedded/bin:/bin:/usr/bin"
