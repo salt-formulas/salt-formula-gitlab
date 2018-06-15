@@ -325,11 +325,17 @@ gitlab_rails['omniauth_enabled'] = false
 
 ##! Docs: https://docs.gitlab.com/omnibus/settings/environment-variables.html
 
-{% if server.proxy is defined -%}
+{% if server.http_proxy is defined or server.https_proxy is defined -%}
 gitlab_rails['env'] = {
-    "http_proxy" => "{{ server.proxy.http_proxy }}",
-    "https_proxy" => "{{ server.proxy.https_proxy }}",
-    "no_proxy" => "{{ server.proxy.no_proxy }}"
+    {%- if server.http_proxy is defined %}
+    "http_proxy" => "{{ server.http_proxy }}",
+    {%- endif %}
+    {%- if server.https_proxy is defined %}
+    "https_proxy" => "{{ server.https_proxy }}",
+    {%- endif %}
+    {%- if server.no_proxy is defined %}
+    "no_proxy" => "{{ server.no_proxy }}"
+    {%- endif %}
 }
 {% endif -%}
 
