@@ -47,7 +47,6 @@ def _group_to_dict(group):
         'description': group.description,
         'path': group.path,
         'url': group.web_url,
-        'visibility_level': group.visibility_level,
         'lfs_enabled': group.lfs_enabled,
         'request_access_enabled': group.request_access_enabled,
     }
@@ -61,8 +60,6 @@ def _project_to_dict(project):
         'path': project.path,
         'path_with_namespace': project.path_with_namespace,
         'url': project.web_url,
-        'visibility_level': project.visibility_level,
-        'public': project.public,
         'default_branch': project.default_branch,
     }
 
@@ -106,7 +103,7 @@ def auth(**kwargs):
         git = Gitlab(url, private_token=token)
     else:
         git = Gitlab(url, email=user, password=password)
-        git.auth()
+    git.auth()
     return git
 
 
@@ -420,7 +417,7 @@ def project_list(**kwargs):
     '''
     gitlab = auth(**kwargs)
     ret = {}
-    projects = gitlab.projects.all()
+    projects = gitlab.projects.list()
     for project in projects:
         ret[project.path_with_namespace] = _project_to_dict(project)
     return ret
