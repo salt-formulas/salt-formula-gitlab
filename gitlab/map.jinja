@@ -30,8 +30,10 @@
             'host': '127.0.0.1',
             'port': 8080
           }
-        }
-
+        },
+        'http_proxy': none,
+        'https_proxy': none,
+        'no_proxy': none
     },
 }, merge=salt['pillar.get']('gitlab:server')) %}
 
