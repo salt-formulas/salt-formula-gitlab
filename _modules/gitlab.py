@@ -103,10 +103,10 @@ def auth(**kwargs):
     url = get_key('url', 'https://localhost/')
     LOG.info("Making HTTP request to {0} ...".format(url))
     if token:
-        git = Gitlab(url, token, ssl_verify=False)
+        git = Gitlab(url, private_token=token)
     else:
-        git = Gitlab(url, email=user, password=password, ssl_verify=False)
-    git.auth()
+        git = Gitlab(url, email=user, password=password)
+        git.auth()
     return git
 
 
