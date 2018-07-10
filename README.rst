@@ -110,20 +110,11 @@ hooks.
               keyname:
                 enabled: true
                 key: public_part_of_ssh_key
-            hook:
-              hookname:
-                enabled: true
-                address: http://ci-tool/
 
 
 More information
 ================
 
-* https://github.com/gitlabhq/gitlabhq/blob/6-1-stable/doc/install/installation.md
-* https://github.com/gitlabhq/gitlabhq/blob/master/doc/update/6.0-to-6.1.md
-* https://github.com/gitlabhq/gitlabhq/tree/master/doc/update
-* https://wiki.archlinux.org/index.php/gitlab
-* https://github.com/gitlabhq/gitlabhq/issues/6687
 * https://github.com/gitlabhq/gitlab-public-wiki/wiki/Trouble-Shooting-Guide
 
 
