@@ -85,46 +85,6 @@ gitlab_deploykey_{{ repo_name }}_{{ key_name }}:
 
 {%- endfor %}
 
-{%- for hook_name, hook in repo.get('hook', {}).iteritems() %}
-
-{%- if hook.enabled %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_present:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- else %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_absent:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- endif %}
-
-{%- endfor %}
-
-{%- for hook_name, hook in client.get('global_hook', {}).iteritems() %}
-
-{%- if hook.enabled %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_present:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- else %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_absent:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- endif %}
-
-{%- endfor %}
-
 {%- endfor %}
 
 {%- endif %}

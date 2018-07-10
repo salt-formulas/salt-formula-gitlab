@@ -11,19 +11,9 @@ Enforce the project/repository
 
 .. code-block:: yaml
 
-    Gitlab_project:
+    gitlab_project:
       gitlab.project_present:
-        name:
-
-Enforce the repository hook
----------------------------
-
-.. code-block:: yaml
-
-    jenkins:
-      gitlab.hook_present:
-      - project: 'namespace/repository'
-      - hook: http://url_of_hook
+      - name: project name
 
 Enforce the repository deploy key
 ---------------------------------
@@ -105,7 +95,6 @@ def project_present(name, description=None, default_branch="master", **kwargs):
 
     # Check if project is already present
     project = __salt__['gitlab.project_get'](name, **kwargs)
-    print project
     if not 'Error' in project:
         pass
 #        if description and not "description" in kwargs:
@@ -126,8 +115,7 @@ def project_absent(name, **kwargs):
     '''
     Ensure that the gitlab project is absent.
 
-    name
-        The name of the project that should not exist
+    :param name: The name of the project that should not exist
     '''
     ret = {'name': name,
            'changes': {},
@@ -141,90 +129,28 @@ def project_absent(name, **kwargs):
     return ret
 
 
-def deploykey_present(project, key, title, **kwargs):
+def deploykey_present(project, name, key, **kwargs):
     '''
     Ensure deploy key present for Gitlab repository
 
     :param project: Project name (full path)
-    :param key: The key value
-    :param title: Human name for the key
-
-    Pillar Example:
-
-    .. code-block:: yaml
-
-        repository:
-          name-space/repo-name:
-            deploy_key:
-              key_name:
-                enabled: true
-                key: ssh-rsa vfdsfdsfewf32rewgrdsgresgrdsvg
+    :param name: Human name for the key
     '''
-    ret = {'name': title,
+    ret = {'name': name,
            'changes': {},
            'result': True,
-           'comment': 'Deploy key "{0}" already exists in project {1}'.format(title, project)}
-    deploy_key = __salt__['gitlab.deploykey_get'](project, key, **kwargs)
+           'comment': 'Deploy key "{0}" already exists in project {1}'.format(name, project)}
+    project_key_test = __salt__['gitlab.project_key_get'](project, name, **kwargs)
+    if 'Error' not in project_key_test:
+        return ret
+    deploy_key_test = __salt__['gitlab.deploykey_get'](key, **kwargs)
+    if 'Error' not in deploy_key_test:
+        deploy_key = __salt__['gitlab.project_key_enable'](project, name, **kwargs)
+    else:
+        deploy_key = __salt__['gitlab.project_key_create'](project, name, key, **kwargs)
     if 'Error' not in deploy_key:
-        return ret
-    else:
-        deploy_key = __salt__['gitlab.deploykey_create'](project, key, title, **kwargs)
-        ret['comment'] = 'Deploy key {0} has been added'.format(title)
+        ret['comment'] = 'Deploy key {0} has been added'.format(name)
         ret['changes']['Deploykey'] = 'Created'
-    return ret
-
-
-def deploykey_absent(project, key, title, **kwargs):
-    '''
-    Ensure that the deploy key doesn't exist in Gitlab project
-
-    :param key: The key value
-    '''
-    ret = {'name': name,
-           'changes': {},
-           'result': True,
-           'comment': 'Deploy key "{0}" is already absent'.format(name)}
-    dkey = __salt__['gitlab.deploykey_get'](name,
-                                            project,
-                                            **kwargs)
-    if 'Error' not in dkey:
-        __salt__['gitlab.deploykey_delete'](name,
-                                            key,
-                                            project,
-                                            **kwargs)
-        ret['comment'] = 'Deploy key "{0}" has been deleted'.format(name)
-        ret['changes']['Deploykey'] = 'Deleted'
-    return ret
-
-
-def hook_present(name, project, **kwargs):
-    '''
-    Ensure hook present in Gitlab project
-
-    name
-        The URL of hook
-
-    project
-        path to project, i.e. namespace/repo-name
-
-    '''
-    ret = {'name': name,
-           'changes': {},
-           'result': True,
-           'comment': 'Hook "{0}" already exists in project {1}'.format(name, project)}
-
-    # Check if key is already present
-    hook = __salt__['gitlab.hook_get'](name,
-                                       project_name=project,
-                                       **kwargs)
-
-    if 'Error' not in hook:
-        return ret
     else:
-        # Create hook
-        hook = __salt__['gitlab.hook_create'](name,
-                                              project_name=project,
-                                              **kwargs)
-        ret['comment'] = 'Hook "{0}" has been added'.format(name)
-        ret['changes']['Hook'] = 'Created'
+        ret['result'] = False
     return ret

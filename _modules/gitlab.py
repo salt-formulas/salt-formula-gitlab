@@ -64,24 +64,6 @@ def _project_to_dict(project):
     }
 
 
-def _get_project(gitlab, path_with_namespace):
-
-    selected_project = None
-    projects = git.getprojectsall(per_page=PER_PAGE)
-    page = 1
-
-    while not selected_project:
-        for project in projects:
-            if project.get('path_with_namespace') == name:
-                selected_project = project
-                break
-        page += 1
-        projects = git.getprojectsall(page=page, per_page=PER_PAGE)
-        if len(projects) == 0:
-            break
-    return selected_project
-
-
 def auth(**kwargs):
     '''
     Set up gitlab authenticated client
@@ -107,160 +89,7 @@ def auth(**kwargs):
     return git
 
 
-def hook_get(path_with_namespace, hook_url, **kwargs):
-    '''
-    Return a specific hook for gitlab repository
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.endpoint_get nova
-    '''
-    git = auth(**kwargs)
-    if project_name:
-        project = _get_project(git, project_name)
-    else:
-        project = _get_project_by_id(git, project_id)
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for hook in git.getprojecthooks(project.get('id'), per_page=PER_PAGE):
-        if hook.get('url') == hook_url:
-            return {hook.get('url'): hook}
-    return {'Error': 'Could not find hook for the specified project'}
-
-
-def hook_list(project, **kwargs):
-    '''
-    Return a list of available hooks for project
-
-    CLI Example:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.hook_list 341
-    '''
-    git = auth(**kwargs)
-    ret = {}
-
-    project = _get_project(git, project)
-
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for hook in git.getprojecthooks(project.get('id')):
-        ret[hook.get('url')] = hook
-    return ret
-
-
-def hook_create(hook_url, issues_events=False, merge_requests_events=False,
-                push_events=False, project_id=None, project_name=None, **kwargs):
-    '''
-    Create an hook for a project
-
-    CLI Examples:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.hook_create 'https://hook.url/' push_events=True project_id=300
-    '''
-    git = auth(**kwargs)
-    if project_name:
-        project = _get_project(git, project_name)
-    else:
-        project = _get_project_by_id(git, project_id)
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    create = True
-    for hook in git.getprojecthooks(project.get('id')):
-        if hook.get('url') == hook_url:
-            create = False
-    if create:
-        git.addprojecthook(project['id'], hook_url)
-    return hook_get(hook_url, project_id=project['id'])
-
-
-def hook_delete(hook_url, project_id=None, project_name=None, **kwargs):
-    '''
-    Delete hook of a Gitlab project
-
-    CLI Examples:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.hook_delete 'https://hook.url/' project_id=300
-    '''
-    git = auth(**kwargs)
-    if project_name:
-        project = _get_project(git, project_name)
-    else:
-        project = _get_project_by_id(git, project_id)
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for hook in git.getprojecthooks(project.get('id')):
-        if hook.get('url') == hook_url:
-            return git.deleteprojecthook(project['id'], hook['id'])
-    return {'Error': 'Could not find hook for the specified project'}
-
-
-def deploykey_create(project, name, key, **kwargs):
-    '''
-    Add deploy key to Gitlab project
-
-    :param project: Project namespace and path
-    :param title: Human name of the key
-    :param key: The key value itself
-    :return: true if sucess, false if not
-
-    CLI Examples:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.deploykey_create title keyfrsdfdsfds 43
-    '''
-    git = auth(**kwargs)
-
-    project = _get_project(git, project)
-
-    if not project:
-        LOG.error("project not exists")
-        return {'Error': 'Unable to resolve project'}
-
-    try:
-        result = git.adddeploykey(project['id'], title, key)
-    except Exception, e:
-        raise e
-
-    LOG.debug("%s deploykey_create: %s" % (title, result))
-
-    return 'Gitlab deploy key ID "{0}" was added to {1}'.format(title, project['path_with_namespace'])
-
-
-def deploykey_delete(path_with_namespace, deploy_key, **kwargs):
-    '''
-    Delete a deploy key from Gitlab project
-
-    CLI Examples:
-
-    .. code-block:: bash
-
-        salt '*' gitlab.deploykey_delete key.domain.com project_id=12
-        salt '*' gitlab.deploykey_delete key.domain.com project=namespace/path
-    '''
-    git = auth(**kwargs)
-    if project:
-        project = _get_project(git, project)
-    else:
-        project = _get_project_by_id(git, project_id)
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for key in git.getdeploykeys(project.get('id')):
-        if key.get('title') == title:
-            git.deletedeploykey(project['id'], key['id'])
-            return 'Gitlab deploy key ID "{0}" deleted'.format(key['id'])
-    return {'Error': 'Could not find deploy key for the specified project'}
-
-
-def deploykey_get(title, project, **kwargs):
+def deploykey_get(title, **kwargs):
     '''
     Return a specific deploy key
 
@@ -268,22 +97,125 @@ def deploykey_get(title, project, **kwargs):
 
     .. code-block:: bash
 
-        salt '*' gitlab.deploykey_get key.domain.com 12
-        salt '*' gitlab.deploykey_get key.domain.com project_name=namespace/path
+        salt '*' gitlab.deploykey_get key.domain.com
     '''
-    git = auth(**kwargs)
-
-    project = _get_project(git, project)
-
-    if not project:
-        return {'Error': 'Unable to resolve project'}
-    for key in git.getdeploykeys(project.get('id')):
-        if key.get('title') == title:
-            return {key.get('title'): key}
+    deploykeys = deploykey_list(**kwargs)
+    if title in deploykeys:
+        return {title: deploykeys[title]}
     return {'Error': 'Could not find deploy key for the specified project'}
 
 
-def deploykey_list(project, **kwargs):
+def deploykey_list(**kwargs):
+    '''
+    Return a list of available deploy keys
+
+    CLI Example:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.deploykey_list
+    '''
+    ret = {}
+    gitlab = auth(**kwargs)
+    keys = gitlab.deploykeys.list()
+
+    for key in keys:
+        ret[key.title] = {
+            'title': key.title,
+            'key': key.key,
+            'id': key.id,
+        }
+    return ret
+
+
+def project_key_create(path_with_namespace, title, key, **kwargs):
+    '''
+    Create deploy key
+
+    :param path_with_namespace: Name of project
+    :param key: Value of the key
+    :param key: Value of the key
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.deploykey_create key-title 'ssh-key ...'
+    '''
+    gitlab = auth(**kwargs)
+    project = gitlab.projects.get(path_with_namespace)
+    new_key = project.keys.create({'title': title,
+                                   'key': key})
+    if new_key:
+        return {title: 'Deploy key "{0}" was created'.format(title)}
+    return {'Error': 'Could not create deploy key "{}"'.format(title)}
+
+
+def project_key_enable(path_with_namespace, title, **kwargs):
+    '''
+    Add deploy key to Gitlab project
+
+    :param path_with_namespace: Project namespace with path
+    :param title: Name of the key
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.project_key_enable ns/repo key-title
+    '''
+    gitlab = auth(**kwargs)
+    project = gitlab.projects.get(path_with_namespace)
+    keys = gitlab.deploykeys.list()
+    key_id=None
+    for key in keys:
+        if key.title == title:
+            key_id = key.id
+    if key_id is not None:
+        project.keys.enable(key_id)
+        return {title: 'Deploy key "{0}" was added to {1}'.format(title, path_with_namespace)}
+    return {'Error': 'Could not find deploy key "{}"'.format(title)}
+
+
+def project_key_disable(path_with_namespace, title, **kwargs):
+    '''
+    Delete a deploy key from Gitlab project
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.project_key_disable ns/repo key.domain.com
+    '''
+    gitlab = auth(**kwargs)
+    project = gitlab.projects.get(path_with_namespace)
+    keys = gitlab.deploykeys.list()
+    key_id = None
+    for key in keys:
+        if key.title == title:
+            key_id = key.id
+    if key_id is not None:
+        project.keys.disable(key_id)
+    return {'Error': 'Could not find deploy key "{}" for the specified project'.format(title)}
+
+
+def project_key_get(path_with_namespace, title, **kwargs):
+    '''
+    Return a specific deploy key
+
+    CLI Examples:
+
+    .. code-block:: bash
+
+        salt '*' gitlab.project_key_get ns/repo key.domain.com
+    '''
+    deploykeys = project_key_list(path_with_namespace, **kwargs)
+    if title in deploykeys:
+        return {title: deploykeys[title]}
+    return {'Error': 'Could not find deploy key for the specified project'}
+
+
+def project_key_list(path_with_namespace, **kwargs):
     '''
     Return a list of available deploy keys for project
 
@@ -291,19 +223,19 @@ def deploykey_list(project, **kwargs):
 
     .. code-block:: bash
 
-        salt '*' gitlab.deploykey_list 341
+        salt '*' gitlab.project_key_list group/repo-name
     '''
-    gitlab = auth(**kwargs)
     ret = {}
-    project = project_get(project, **kwargs)
-    if not 'Error' in project:
-        return {'Error': 'Unable to get the repository'}
-
-    keys = gitlab.project_keys.list(project_id=project[project]['id'])
-    print keys[0]
+    gitlab = auth(**kwargs)
+    project = gitlab.projects.get(path_with_namespace)
+    keys = project.keys.list()
 
     for key in keys:
-        ret[key.get('title')] = key
+        ret[key.title] = {
+            'title': key.title,
+            'key': key.key,
+            'id': key.id,
+        }
     return ret
 
 
@@ -318,7 +250,6 @@ def project_create(path_with_namespace, description="", default_branch="master",
     :param wiki_enabled:
     :param snippets_enabled:
     :param public: if true same as setting visibility_level = 20
-    :param visibility_level: Integer 1-20
     :param import_url: https://git.tcpcloud.eu/django/django-kedb.git
 
     CLI Examples:
@@ -393,9 +324,7 @@ def project_get(path_with_namespace, **kwargs):
     .. code-block:: bash
 
         salt '*' gitlab.project_get namespace/repository
-        salt '*' gitlab.project_get id=323
     '''
-    gitlab = auth(**kwargs)
     ret = {}
     projects = project_list(**kwargs)
     if path_with_namespace in projects:
@@ -423,7 +352,7 @@ def project_list(**kwargs):
     return ret
 
 
-def project_update(path_with_namespace=None, **kwargs):
+def project_update(path_with_namespace=None, description=None, default_branch=None, **kwargs):
     '''
     Update gitlab project
 
@@ -433,19 +362,15 @@ def project_update(path_with_namespace=None, **kwargs):
 
         salt '*' gitlab.project_update name-space/project-name
     '''
-    git = auth(**kwargs)
-    if project_id:
-        project = project_get(project_id)
-    else:
-        project = project_get(name)
-    project = project_get(name=name)
+    gitlab = auth(**kwargs)
+    project = project_get(path_with_namespace, **kwargs)
     if not project.has_key('Error'):
-        project = project[name.split("/")[1]]
+        project = project[path_with_namespace.split("/")[1]]
     if description == None:
         description = project['description']
     if default_branch == None:
         default_branch = project['default_branch']
-    git.editproject(project_id, default_branch=default_branch)
+    gitlab.editproject(project[path_with_namespace]['id'], default_branch=default_branch)
 
 
 def group_list(**kwargs):
